@@ -1,0 +1,66 @@
+version: "3"
+services:
+  pgstac:
+    container_name: pgstac-tutorial-postgis
+    image: postgis/postgis:15-3.4
+    platform: linux/amd64
+    environment:
+      - POSTGRES_USER=adminrole
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=pgstac
+      - PGUSER=adminrole
+      - PGPASSWORD=password
+      - PGDATABASE=pgstac
+    ports:
+      - "5438:5432"
+    command: postgres
+  stacfastapi:
+    container_name: pgstac-tutorial-stacfastapi
+    image: pgstac-tutorial
+    build:
+      context: .
+      dockerfile: Dockerfile
+    platform: linux/amd64
+    environment:
+      - PGHOST=pgstac
+      - PGUSER=adminrole
+      - PGPASSWORD=password
+      - PGDATABASE=pgstac
+      - APP_HOST=0.0.0.0
+      - APP_PORT=8890
+      - RELOAD=true
+      - ENVIRONMENT=local
+      - POSTGRES_USER=adminrole
+      - POSTGRES_PASS=password
+      - POSTGRES_DBNAME=pgstac
+      - POSTGRES_HOST_READER=pgstac
+      - POSTGRES_HOST_WRITER=pgstac
+      - POSTGRES_PORT=5432
+      - WEB_CONCURRENCY=10
+      - VSI_CACHE=TRUE
+      - GDAL_HTTP_MERGE_CONSECUTIVE_RANGES=YES
+      - GDAL_DISABLE_READDIR_ON_OPEN=EMPTY_DIR
+      - DB_MIN_CONN_SIZE=1
+      - DB_MAX_CONN_SIZE=1
+      - USE_API_HYDRATE=true
+    ports:
+      - "8890:8890"
+    depends_on:
+      - pgstac
+    command: bash -c "sleep 10 && pg_isready -t 60 && python -m stac_fastapi.pgstac.app"
+  tutorial:
+    container_name: pgstac-tutorial-notebook
+    image: pgstac-tutorial
+    environment:
+      - PGHOST=pgstac
+      - PGUSER=adminrole
+      - PGPASSWORD=password
+      - PGDATABASE=pgstac
+      - JUPYTER_TOKEN=token
+    ports:
+      - "8891:8891"
+    depends_on:
+      - pgstac
+    volumes:
+      - .:/tutorial
+    command: ./tutorial/start.sh
