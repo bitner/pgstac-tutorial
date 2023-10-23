@@ -8,7 +8,9 @@ RUN \
     && apt-get install -y --no-install-recommends \
         ca-certificates \
         postgresql-client \
-        tini
+        tini \
+        gcc \
+        python-dev
 RUN \
     python3 -m pip install --upgrade \
         pip \
